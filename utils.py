@@ -1,6 +1,6 @@
 
 """Exploratory functions used to explore the data"""
-
+import csv
 
 """ Prints out categories and how many you see """
 def print_categories():
