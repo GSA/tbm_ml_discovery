@@ -1,6 +1,4 @@
-service_now_ticket_sample.xlsx
-service_now_ticket_sample.csv
-service_now_sample.csv
+*.csv
 .DS_Store
 *.pyc
 .ipynb_checkpoints/
