@@ -2,7 +2,6 @@
 Run this script on coded data to train a model to identify the associated app from a text description.
 This will save data models that can classify text to the trained categories. 
 """
-
 import json
 
 import numpy as np
@@ -13,14 +12,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 
-input_file = "service_now_sample.csv"
-# can do the yes to 1 in read_csv
-df = pd.read_csv(input_file, header = 0)
-
-# extract the needed categories
-gear_df = df[['short_description', 'u_category_gear']]
-# remove nulls
-gear_df = gear_df.replace(np.nan, '', regex=True)
 
 # The most frequently appearing apps in the data
 # Column name and the app as it appears in the u_category_gear column
@@ -55,6 +46,15 @@ categories = {
     'pegasys_vrm': 'Pegasys Vendor Request Management',
 }
 
+input_file = "service_now_sample.csv"
+# can do the yes to 1 in read_csv
+df = pd.read_csv(input_file, header = 0)
+
+# extract the needed categories
+gear_df = df[['short_description', 'u_category_gear']]
+# remove nulls
+gear_df = gear_df.replace(np.nan, '', regex=True)
+
 # add a column to the data frame for each category so we can evaluate them separately
 for category_key in categories:
     gear_df[category_key] = np.where(gear_df['u_category_gear']==categories[category_key], 1, 0)
@@ -78,14 +78,25 @@ def save_data_model(text_clf, app):
         counter += 1
     store.close() 
 
+intercepts = {}
+# classes = {}
+
 # train and test for each category
 for app in categories:
     formated_category = gear_df[[app]]
     text_clf = MultinomialNB().fit(X_train_counts,formated_category.values.ravel())
     save_data_model(text_clf, app)
+    intercepts[app] = float(text_clf.intercept_[0])
+    # I am not saving them because they are all [0, 1]
+    # classes[app] = array(text_clf.classes_[0])
+
     # test model
     predicted = text_clf.predict(X_train_counts)
     # print(app, np.mean(predicted == formated_category.values.ravel()))
     gear_df[app] = predicted
+
+with open('data_models/classes.json', 'w') as json_file:
+    print(intercepts)
+    json.dump(intercepts, json_file)
 
 gear_df.to_csv('category_predictions_top_28.csv')
