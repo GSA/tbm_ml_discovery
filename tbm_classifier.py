@@ -7,46 +7,15 @@ import json
 import numpy as np
 import pandas as pd
 import tables 
+
+from apps import categories
+
 # would like to load from data in next iteration
 from sklearn.externals import joblib
-
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 
-
-# The most frequently appearing apps in the data
-# Column name and the app as it appears in the u_category_gear column
-categories = {
-    'eoffer_emod': 'eOffer/eMod - Electronic Offers/Electronic Modifications',
-    'vcss': 'VCSS - Vendor Customer Self Service',
-    'any_connect_windows': 'Cisco AnyConnect Windows Client 3.1',
-    'easi': 'EASi - Electronic Acquisition System Integration',
-    'google_email': 'Google Email',
-    'pegasys_admin': 'Pegasys Admin Queries',
-    'fss_online': 'FSS Online - Federal Supply Service Online',
-    'etams': 'ETAMS - Electronic Time and Attendance Management System',
-    'pegasys_data': 'PDE - Pegasys Data Entry',
-    'aloha': 'Aloha - Authorized Leave and Overtime Help Application',
-    'fmis': 'FMIS - Financial Management Information System',
-    'apm': 'APM - Acquisition Planning Module',
-    'google_docs': 'Google Docs',
-    'google_chrome': 'Google Chrome',
-    'ears': 'EARS - Enterprise Access Request System',
-    'bookit': 'BookIt',
-    'rocis': 'ROCIS - RISC/OIRA Consolidated Information System',
-    'eviewer': 'eViewer',
-    'google_calendar': 'Google Calendar',
-    'geco': 'GECO - GSA Enhanced Checkout',
-    'ors': 'ORS - Offer Registration System',
-    'google_sites': 'Google Sites',
-    'bi': 'BI - Business Intelligence Framework',
-    'google_hangout': 'Google Hangout',
-    'google_groups': 'Google Groups',
-    'vitap': 'VITAP - Visual Invoice Tracking and Payment (FoxPro)',
-    'ocms': 'OCMS - On-Line Contract Management System',
-    'pegasys_vrm': 'Pegasys Vendor Request Management',
-}
 
 input_file = "service_now_sample.csv"
 # can do the yes to 1 in read_csv
@@ -71,20 +40,12 @@ tfidf_transformer = TfidfTransformer()
 X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
 X_train_tfidf.shape
 
+
 def save_data_model(text_clf, app):
     # want to save as data in the future
     file_name = "data_models/" + app + "_model.pkl"
     joblib.dump(text_clf, file_name) 
-    # np.savetxt(file_name, text_clf.coef_, delimiter=',')
-    # store = pd.HDFStore(file_name)
-    # counter = 0
-    # for row in text_clf.coef_:
-    #     store['row' + str(counter)] = pd.DataFrame(row)
-    #     counter += 1
-    # store.close() 
 
-intercepts = {}
-# classes = {}
 
 # train and test for each category
 for app in categories:
@@ -92,12 +53,9 @@ for app in categories:
     text_clf = MultinomialNB().fit(X_train_counts,formated_category.values.ravel())
 
     save_data_model(text_clf, app)
-    # intercepts[app] = float(text_clf.intercept_[0])
-    # I am not saving them because they are all [0, 1]
-    # classes[app] = array(text_clf.classes_[0])
-    # test model
     predicted = text_clf.predict(X_train_counts)
-    # print(app, np.mean(predicted == formated_category.values.ravel()))
+    # nice output on the effectiveness of the models
+    print(app, np.mean(predicted == formated_category.values.ravel()))
     gear_df[app] = predicted
 
 with open('data_models/classes.json', 'w') as json_file:
