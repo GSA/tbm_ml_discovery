@@ -7,6 +7,8 @@ import json
 import numpy as np
 import pandas as pd
 import tables 
+# would like to load from data in next iteration
+from sklearn.externals import joblib
 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -70,13 +72,16 @@ X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
 X_train_tfidf.shape
 
 def save_data_model(text_clf, app):
-    file_name = "data_models/" + app + "_model.h5"
-    store = pd.HDFStore(file_name)
-    counter = 0
-    for row in text_clf.coef_:
-        store['row' + str(counter)] = pd.DataFrame(row)
-        counter += 1
-    store.close() 
+    # want to save as data in the future
+    file_name = "data_models/" + app + "_model.pkl"
+    joblib.dump(text_clf, file_name) 
+    # np.savetxt(file_name, text_clf.coef_, delimiter=',')
+    # store = pd.HDFStore(file_name)
+    # counter = 0
+    # for row in text_clf.coef_:
+    #     store['row' + str(counter)] = pd.DataFrame(row)
+    #     counter += 1
+    # store.close() 
 
 intercepts = {}
 # classes = {}
@@ -85,18 +90,17 @@ intercepts = {}
 for app in categories:
     formated_category = gear_df[[app]]
     text_clf = MultinomialNB().fit(X_train_counts,formated_category.values.ravel())
+
     save_data_model(text_clf, app)
-    intercepts[app] = float(text_clf.intercept_[0])
+    # intercepts[app] = float(text_clf.intercept_[0])
     # I am not saving them because they are all [0, 1]
     # classes[app] = array(text_clf.classes_[0])
-
     # test model
     predicted = text_clf.predict(X_train_counts)
     # print(app, np.mean(predicted == formated_category.values.ravel()))
     gear_df[app] = predicted
 
 with open('data_models/classes.json', 'w') as json_file:
-    print(intercepts)
     json.dump(intercepts, json_file)
 
 gear_df.to_csv('category_predictions_top_28.csv')
