@@ -58,7 +58,19 @@ for app in categories:
     print(app, np.mean(predicted == formated_category.values.ravel()))
     gear_df[app] = predicted
 
-with open('data_models/classes.json', 'w') as json_file:
-    json.dump(intercepts, json_file)
 
 gear_df.to_csv('category_predictions_top_28.csv')
+
+
+# I might want to take care of this earlier, but will write it out here
+def decode_app(row):
+    for app in categories:
+        if row[app] == 1:
+            row[app] = categories[app]
+    else:
+        row['category_label'] = 'undefined'
+
+gear_df.apply(lambda row: decode_app(row), axis=1)
+
+
+gear_df.to_csv('category_predictions_with_label.csv')
