@@ -9,7 +9,7 @@ def print_categories():
     with open('service_now_ticket_sample.csv') as csvfile:
          reader = csv.DictReader(csvfile)
          for row in reader:
-            if row['u_category_gear'] not in u_item_dict and row["U_Category Match Found in GEAR?"] == "Yes":
+            if row['u_category_gear'] not in u_item_dict:
                 u_item_dict[row['u_category_gear']] = 1
             elif row["U_Category Match Found in GEAR?"] == "Yes":
                 u_item_dict[row['u_category_gear']] = u_item_dict[row['u_category_gear']] + 1
