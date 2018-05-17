@@ -3,8 +3,9 @@
 import csv
 import operator
 
-""" Prints out categories and how many occurrences in the category """
+
 def print_categories():
+    """ Prints out categories and how many occurrences in the category """
     u_item_dict = {}
     with open('service_now_ticket_sample.csv') as csvfile:
          reader = csv.DictReader(csvfile)
@@ -16,8 +17,9 @@ def print_categories():
     print(sorted(u_item_dict.items(), key=operator.itemgetter(1)))
 
 
-"""print average of how long tickets are open """
+
 def print_average_open():
+    """Print average of how long tickets are open """
     days = 0
     incidents = 0
 
@@ -33,4 +35,18 @@ def print_average_open():
     print(u_item_dict)
     for item in u_item_dict:
         print (item, item[0], item[1])
-        
+
+
+def load_category_mapping():
+    category_map = {}
+    subcategory_map = {}
+    item_map = {}
+
+    with open('Application_TableLookup.csv', 'r') as csv_file:
+        reader = csv.reader(csv_file)
+        for line in reader:
+            # gear_category then the matching terms
+            category_map[line[0]] = line[1]
+            subcategory_map[line[3]] = line[4]
+            item_map[line[6]] = line[7]
+    return(category_map, subcategory_map, item_map)

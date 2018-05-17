@@ -9,6 +9,7 @@ import pandas as pd
 import tables 
 
 from apps import categories
+from utils import load_category_mapping
 
 # would like to load from data in next iteration
 from sklearn.externals import joblib
@@ -16,6 +17,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 
+
+"""Training the data model"""
 
 input_file = "service_now_sample.csv"
 # can do the yes to 1 in read_csv
@@ -35,13 +38,9 @@ count_vect = CountVectorizer(stop_words='english')
 X_train_counts = count_vect.fit_transform(gear_df['short_description'])
 X_train_counts.shape
 
-# shape data
+# transform data
 tfidf_transformer = TfidfTransformer()
 X_train_counts = count_vect.fit_transform(gear_df['short_description'])
-# X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
-
-
-# X_train_tfidf.shape
 
 
 def save_data_model(text_clf, app):
@@ -65,22 +64,10 @@ for app in categories:
 gear_df.to_csv('category_predictions_top_28.csv')
 
 
-# # I might want to take care of this earlier, but will write it out here
-# def decode_app(row):
-#     for app in categories:
-#         if row[app] == 1:
-#             row[app] = categories[app]
-#     else:
-#         row['category_label'] = 'undefined'
-
-# gear_df['prediction_of_category'] = gear_df.apply(lambda row: decode_app(row), axis=1)
-
-
-# gear_df.to_csv('category_predictions_with_label.csv')
-
-
-""" seperate inot another file """
-
+""" 
+Apply data models to text
+ToDo: separate into another file 
+"""
 
 input_file = "20180501_ServiceNow_INC_Tickets.csv"
 # can do the yes to 1 in read_csv
@@ -88,7 +75,6 @@ df = pd.read_csv(input_file, header = 0)
 
 # remove nulls
 new_df = df.replace(np.nan, '', regex=True)
-
 
 # add a column to the data frame for each category so we can evaluate them separately
 for category_key in categories:
@@ -103,13 +89,26 @@ for app in categories:
     predicted = text_clf.predict(X_train_counts)
     new_df[app] = predicted
 
+
+# in the new data, look for category matches 
+(category_map, subcategory_map, item_map) = load_category_mapping()
+
+print(item_map)
+
 def decode_app(row):
     field = ''
+    # check the categories
     for app in categories:
         if row[app] == 1:
             field = categories[app]
     if field == '':
         field = 'undefined'
+
+    # overwrite field if it can be mapped directly
+    field = item_map.get(row['u_item'], field)
+    field = subcategory_map.get(row['u_subcategory'], field)
+    field = subcategory_map.get(row['u_category'], field)
+
     return field
 
 new_df['prediction_of_category'] = new_df.apply(lambda row: decode_app(row), axis=1)
@@ -118,4 +117,3 @@ new_df['prediction_of_category'] = new_df.apply(lambda row: decode_app(row), axi
 new_df = new_df.drop(columns=[app for app in categories])
 
 new_df.to_csv('categorized_output_1.csv')
-

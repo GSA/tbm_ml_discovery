@@ -18,7 +18,7 @@ To train and test the data models run:
 python tbm_calssifier.py
 ```
 
-That will train models to recognize the app associated with the record based on the short description. It stores each model in `/data_models` as a HDF5 file.
+That will train models to recognize the app associated with the record based on the short description. It stores each model in `/data_models` as a HDF5 file. It will then take an new file and make the classifications. 
 
 
 
